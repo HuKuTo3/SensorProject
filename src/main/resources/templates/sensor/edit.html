@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Sensor</title>
+</head>
+<body>
+    <h1>Edit Sensor</h1>
+
+    <div th:if="${error}" style="color: red;">
+        <p th:text="${error}"></p>
+    </div>
+
+    <form th:action="@{/sensors/edit/{id}(id=${sensor.id})}" method="post">
+
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" th:value="${sensor.name}" required>
+        <br>
+
+        <label for="model">Model:</label>
+        <input type="text" id="model" name="model" th:value="${sensor.model}" required>
+        <br>
+
+        <label for="rangeFrom">Range from:</label>
+        <input type="number" id="rangeFrom" name="rangeFrom" th:value="${sensor.rangeFrom}" required>
+        <br>
+
+        <label for="rangeTo">Range to:</label>
+        <input type="number" id="rangeTo" name="rangeTo" th:value="${sensor.rangeTo}" required>
+        <br>
+
+        <label for="type">Type:</label>
+        <select id="type" name="type">
+            <option th:each="type : ${types}" th:value="${type}" th:text="${type}" th:selected="${sensor.type == type}"></option>
+        </select>
+        <br>
+
+        <label for="unit">Unit:</label>
+        <select id="unit" name="unit">
+            <option th:each="unit : ${units}" th:value="${unit}" th:text="${unit}" th:selected="${sensor.unit == unit}"></option>
+        </select>
+        <br>
+
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" th:value="${sensor.location}">
+        <br>
+
+        <label for="description">Description:</label>
+        <input type="text" id="description" name="description" th:value="${sensor.description}">
+        <br>
+
+        <button type="submit">Update</button>
+    </form>
+
+    <a href="/sensors">Back to List</a>
+</body>
+</html>

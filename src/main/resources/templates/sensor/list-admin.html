@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sensor List</title>
+</head>
+<body>
+    <h1>List of Sensors</h1>
+
+    <form action="/sensors" method="get">
+        <label for="query">Search:</label>
+        <input type="text" id="query" name="query" th:value="${query}">
+        <button type="submit">Search</button>
+    </form>
+
+    <a href="/sensors/create">Create New Sensor</a>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Model</th>
+            <th>Range from</th>
+            <th>Range to</th>
+            <th>Type</th>
+            <th>Unit</th>
+            <th>Location</th>
+            <th>Description</th>
+        </tr>
+        <tr th:each="sensor : ${sensors}">
+            <td th:text="${sensor.id}"></td>
+            <td th:text="${sensor.name}"></td>
+            <td th:text="${sensor.model}"></td>
+            <td th:text="${sensor.rangeFrom}"></td>
+            <td th:text="${sensor.rangeTo}"></td>
+            <td th:text="${sensor.type}"></td>
+            <td th:text="${sensor.unit}"></td>
+            <td th:text="${sensor.location}"></td>
+            <td th:text="${sensor.description}"></td>
+            <td>
+                <a th:href="@{/sensors/edit/{id}(id=${sensor.id})}">Edit</a> |
+                <a th:href="@{/sensors/delete/{id}(id=${sensor.id})}">Delete</a>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
