@@ -75,7 +75,7 @@
                             </div>
                         </td>
                     </tr>
-                    <tr th:if="${sensors.empty}">
+                    <tr th:if="${#lists.isEmpty(sensors.content)}">
                         <td colspan="9" class="text-center">No sensors found</td>
                     </tr>
                 </tbody>

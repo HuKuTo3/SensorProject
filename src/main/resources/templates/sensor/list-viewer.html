@@ -56,7 +56,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col" th:if="${sensors.empty}">
+            <div class="col" th:if="${#lists.isEmpty(sensors.content)}">
                 <div class="alert alert-info" role="alert">
                     No sensors found
                 </div>
