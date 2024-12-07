@@ -1,57 +1,130 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
 <head>
-  <meta charset="UTF-8">
-  <title>Create Sensor</title>
+    <title>Create New Sensor</title>
 </head>
 <body>
-  <h1>Create New Sensor</h1>
+    <section>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">Create New Sensor</h1>
+            <a href="/sensors" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
 
-  <div th:if="${error}" style="color: red;">
-    <p th:text="${error}"></p>
-  </div>
+        <div class="card">
+            <div class="card-body">
+                <div th:if="${error}" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span th:text="${error}"></span>
+                </div>
 
-  <form action="/sensors/create" method="post">
+                <form action="/sensors/create" method="post" class="needs-validation" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="name" name="name" required>
+                                <label for="name">Name</label>
+                                <div class="invalid-feedback">Please provide a name.</div>
+                            </div>
+                        </div>
 
-    <label for="name">Name:</label>
-    <input type="text" id="name" name="name" required>
-    <br>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="model" name="model" required>
+                                <label for="model">Model</label>
+                                <div class="invalid-feedback">Please provide a model.</div>
+                            </div>
+                        </div>
 
-    <label for="model">Model:</label>
-    <input type="text" id="model" name="model" required>
-    <br>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="number" class="form-control" id="rangeFrom" name="rangeFrom" required>
+                                <label for="rangeFrom">Range From</label>
+                                <div class="invalid-feedback">Please provide the minimum range value.</div>
+                            </div>
+                        </div>
 
-    <label for="rangeFrom">Range from:</label>
-    <input type="number" id="rangeFrom" name="rangeFrom" required>
-    <br>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="number" class="form-control" id="rangeTo" name="rangeTo" required>
+                                <label for="rangeTo">Range To</label>
+                                <div class="invalid-feedback">Please provide the maximum range value.</div>
+                            </div>
+                        </div>
 
-    <label for="rangeTo">Range to:</label>
-    <input type="number" id="rangeTo" name="rangeTo" required>
-    <br>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="type" name="type" required>
+                                    <option value="">Select a type</option>
+                                    <option th:each="type : ${types}" 
+                                            th:value="${type}" 
+                                            th:text="${type}"
+                                            th:selected="${sensor != null && sensor.type == type}">
+                                    </option>
+                                </select>
+                                <label for="type">Type</label>
+                                <div class="invalid-feedback">Please select a type.</div>
+                            </div>
+                        </div>
 
-    <label for="type">Type:</label>
-    <select id="type" name="type">
-      <option th:each="type : ${types}" th:value="${type}" th:text="${type}" th:selected="${sensor.type == type}"></option>
-    </select>
-    <br>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="unit" name="unit" required>
+                                    <option value="">Select a unit</option>
+                                    <option th:each="unit : ${units}" 
+                                            th:value="${unit}" 
+                                            th:text="${unit}"
+                                            th:selected="${sensor != null && sensor.unit == unit}">
+                                    </option>
+                                </select>
+                                <label for="unit">Unit</label>
+                                <div class="invalid-feedback">Please select a unit.</div>
+                            </div>
+                        </div>
 
-    <label for="unit">Unit:</label>
-    <select id="unit" name="unit">
-      <option th:each="unit : ${units}" th:value="${unit}" th:text="${unit}" th:selected="${sensor.unit == unit}"></option>
-    </select>
-    <br>
+                        <div class="col-12">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="location" name="location">
+                                <label for="location">Location</label>
+                            </div>
+                        </div>
 
-    <label for="location">Location:</label>
-    <input type="text" id="location" name="location">
-    <br>
+                        <div class="col-12">
+                            <div class="form-floating mb-3">
+                                <textarea class="form-control" id="description" name="description" style="height: 100px"></textarea>
+                                <label for="description">Description</label>
+                            </div>
+                        </div>
+                    </div>
 
-    <label for="description">Description:</label>
-    <input type="text" id="description" name="description">
-    <br>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Create Sensor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
 
-    <button type="submit">Create</button>
-  </form>
-
-  <a href="/sensors">Back to List</a>
+    <script>
+        // Form validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
 </body>
 </html>

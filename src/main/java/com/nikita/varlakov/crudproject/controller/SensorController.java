@@ -2,20 +2,23 @@ package com.nikita.varlakov.crudproject.controller;
 
 import com.nikita.varlakov.crudproject.model.Sensor;
 import com.nikita.varlakov.crudproject.service.SensorService;
+import com.nikita.varlakov.crudproject.constants.AppConstants;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Controller
-@RequestMapping("/sensors")
+@RequestMapping(AppConstants.SENSORS_BASE_PATH)
 public class SensorController {
 
     private final SensorService sensorService;
@@ -31,36 +34,42 @@ public class SensorController {
     })
     @GetMapping
     public String listSensors(
-            @RequestParam(value = "query", required = false) String query, Model model,
+            @RequestParam(value = AppConstants.QUERY_PARAM, required = false) String query,
+            @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size,
+            @RequestParam(defaultValue = AppConstants.SORT_PARAM) String sort,
+            Model model,
             Authentication authentication) {
-        List<Sensor> sensors;
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+        Page<Sensor> sensorPage;
 
         if (query != null && !query.isEmpty()) {
-            sensors = sensorService.searchSensors(query);
+            sensorPage = sensorService.searchSensors(query, pageable);
         } else {
-            sensors = sensorService.getAllSensors();
+            sensorPage = sensorService.getAllSensors(pageable);
         }
 
-        model.addAttribute("sensors", sensors);
-        model.addAttribute("query", query);
+        model.addAttribute(AppConstants.SENSORS_ATTRIBUTE, sensorPage);
+        model.addAttribute(AppConstants.QUERY_ATTRIBUTE, query);
 
         if (authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMINISTRATOR"))) {
-            return "sensor/list-admin";
+                .anyMatch(authority -> authority.getAuthority().equals(AppConstants.ROLE_ADMINISTRATOR))) {
+            return AppConstants.SENSOR_LIST_ADMIN_VIEW;
         }
 
-        return "sensor/list-viewer";
+        return AppConstants.SENSOR_LIST_VIEWER_VIEW;
     }
 
     @Operation(summary = "Показать форму для создания датчика", description = "Показывает форму для добавления нового датчика")
     @ApiResponse(responseCode = "200", description = "Форма для создания датчика отображена")
-    @GetMapping("/create")
+    @GetMapping(AppConstants.SENSORS_CREATE_PATH)
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String showCreateForm(Model model) {
-        model.addAttribute("sensor", new Sensor());
-        model.addAttribute("types", Sensor.SensorType.values());
-        model.addAttribute("units", Sensor.Unit.values());
-        return "sensor/create";
+        model.addAttribute(AppConstants.SENSOR_ATTRIBUTE, new Sensor());
+        model.addAttribute(AppConstants.TYPES_ATTRIBUTE, Sensor.SensorType.values());
+        model.addAttribute(AppConstants.UNITS_ATTRIBUTE, Sensor.Unit.values());
+        return AppConstants.SENSOR_CREATE_VIEW;
     }
 
     @Operation(summary = "Создать новый датчик", description = "Сохраняет новый датчик в базу данных после валидации данных")
@@ -68,30 +77,29 @@ public class SensorController {
             @ApiResponse(responseCode = "200", description = "Датчик успешно создан"),
             @ApiResponse(responseCode = "400", description = "Ошибка при валидации данных датчика")
     })
-    @PostMapping("/create")
+    @PostMapping(AppConstants.SENSORS_CREATE_PATH)
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public String createSensor(@ModelAttribute("sensor") Sensor sensor, Model model) {
-        System.out.println("Win");
+    public String createSensor(@ModelAttribute(AppConstants.SENSOR_ATTRIBUTE) Sensor sensor, Model model) {
         if (sensor.getRangeFrom() != null && sensor.getRangeTo() != null &&
                 sensor.getRangeFrom() >= sensor.getRangeTo()) {
-            model.addAttribute("error", "The minimum range must be less than the maximum range.");
-            return "sensor/create";
+            model.addAttribute(AppConstants.ERROR_ATTRIBUTE, AppConstants.RANGE_ERROR_MESSAGE);
+            return AppConstants.SENSOR_CREATE_VIEW;
         }
 
         sensorService.createSensor(sensor);
-        return "redirect:/sensors";
+        return "redirect:" + AppConstants.SENSORS_BASE_PATH;
     }
 
     @Operation(summary = "Показать форму для редактирования датчика", description = "Отображает форму для редактирования датчика с указанным ID")
     @ApiResponse(responseCode = "200", description = "Форма для редактирования датчика отображена")
-    @GetMapping("/edit/{id}")
+    @GetMapping(AppConstants.SENSORS_EDIT_PATH)
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String showEditForm(@PathVariable Long id, Model model) {
         Sensor sensor = sensorService.getSensorById(id);
-        model.addAttribute("sensor", sensor);
-        model.addAttribute("types", Sensor.SensorType.values());
-        model.addAttribute("units", Sensor.Unit.values());
-        return "sensor/edit";
+        model.addAttribute(AppConstants.SENSOR_ATTRIBUTE, sensor);
+        model.addAttribute(AppConstants.TYPES_ATTRIBUTE, Sensor.SensorType.values());
+        model.addAttribute(AppConstants.UNITS_ATTRIBUTE, Sensor.Unit.values());
+        return AppConstants.SENSOR_EDIT_VIEW;
     }
 
     @Operation(summary = "Обновить информацию о датчике", description = "Обновляет данные существующего датчика в базе данных")
@@ -99,25 +107,25 @@ public class SensorController {
             @ApiResponse(responseCode = "200", description = "Датчик успешно обновлён"),
             @ApiResponse(responseCode = "400", description = "Ошибка при валидации данных датчика")
     })
-    @PostMapping("/edit/{id}")
+    @PostMapping(AppConstants.SENSORS_EDIT_PATH)
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public String updateSensor(@PathVariable Long id, @ModelAttribute("sensor") Sensor sensor, Model model) {
+    public String updateSensor(@PathVariable Long id, @ModelAttribute(AppConstants.SENSOR_ATTRIBUTE) Sensor sensor, Model model) {
         if (sensor.getRangeFrom() != null && sensor.getRangeTo() != null &&
                 sensor.getRangeFrom() >= sensor.getRangeTo()) {
-            model.addAttribute("error", "The minimum range must be less than the maximum range.");
-            return "sensor/edit";
+            model.addAttribute(AppConstants.ERROR_ATTRIBUTE, AppConstants.RANGE_ERROR_MESSAGE);
+            return AppConstants.SENSOR_EDIT_VIEW;
         }
 
         sensorService.updateSensor(id, sensor);
-        return "redirect:/sensors";
+        return "redirect:" + AppConstants.SENSORS_BASE_PATH;
     }
 
     @Operation(summary = "Удалить датчик", description = "Удаляет датчик с указанным ID из базы данных")
     @ApiResponse(responseCode = "200", description = "Датчик успешно удалён")
-    @GetMapping("/delete/{id}")
+    @GetMapping(AppConstants.SENSORS_DELETE_PATH)
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String deleteSensor(@PathVariable Long id) {
         sensorService.deleteSensor(id);
-        return "redirect:/sensors";
+        return "redirect:" + AppConstants.SENSORS_BASE_PATH;
     }
 }

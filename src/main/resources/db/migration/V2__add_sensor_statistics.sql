@@ -1,0 +1,7 @@
+-- Таблица уже существует
+-- CREATE TABLE sensor_statistics (
+--     id BIGSERIAL PRIMARY KEY,
+--     date DATE NOT NULL,
+--     total_count INTEGER NOT NULL,
+--     type_statistics JSONB NOT NULL
+-- );

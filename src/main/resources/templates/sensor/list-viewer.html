@@ -1,41 +1,129 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
 <head>
-    <meta charset="UTF-8">
-    <title>Sensor List</title>
+    <title>Sensor List - Viewer</title>
 </head>
 <body>
-    <h1>List of Sensors</h1>
+    <section>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">Sensor Overview</h1>
+        </div>
 
-    <form action="/sensors" method="get">
-        <label for="query">Search:</label>
-        <input type="text" id="query" name="query" th:value="${query}">
-        <button type="submit">Search</button>
-    </form>
+        <div class="card search-form mb-4">
+            <div class="card-body">
+                <form action="/sensors" method="get" class="row g-3 align-items-center">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="query" name="query" 
+                                   th:value="${query}" placeholder="Search sensors...">
+                            <input type="hidden" name="page" value="0">
+                            <input type="hidden" name="size" th:value="${sensors.size}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-    <table border="1">
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Model</th>
-            <th>Range from</th>
-            <th>Range to</th>
-            <th>Type</th>
-            <th>Unit</th>
-            <th>Location</th>
-            <th>Description</th>
-        </tr>
-        <tr th:each="sensor : ${sensors}">
-            <td th:text="${sensor.id}"></td>
-            <td th:text="${sensor.name}"></td>
-            <td th:text="${sensor.model}"></td>
-            <td th:text="${sensor.rangeFrom}"></td>
-            <td th:text="${sensor.rangeTo}"></td>
-            <td th:text="${sensor.type}"></td>
-            <td th:text="${sensor.unit}"></td>
-            <td th:text="${sensor.location}"></td>
-            <td th:text="${sensor.description}"></td>
-        </tr>
-    </table>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
+            <div class="col" th:each="sensor : ${sensors.content}">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <span class="badge bg-info float-end" th:text="${sensor.type}"></span>
+                        <h5 class="card-title mb-0" th:text="${sensor.name}"></h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted">Model:</small>
+                            <span th:text="${sensor.model}"></span>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Range:</small>
+                            <span th:text="${sensor.rangeFrom + ' - ' + sensor.rangeTo}"></span>
+                            <span th:text="${sensor.unit}" class="text-muted"></span>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Location:</small>
+                            <span th:text="${sensor.location}"></span>
+                        </div>
+                        <p class="card-text" th:text="${sensor.description}"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col" th:if="${sensors.empty}">
+                <div class="alert alert-info" role="alert">
+                    No sensors found
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <select class="form-select me-2" style="width: auto;"
+                        onchange="window.location.href=updateUrlParameter(window.location.href, 'size', this.value)">
+                    <option th:selected="${sensors.size == 6}" value="6">6 per page</option>
+                    <option th:selected="${sensors.size == 12}" value="12">12 per page</option>
+                    <option th:selected="${sensors.size == 24}" value="24">24 per page</option>
+                </select>
+                <span class="ms-2">
+                    Showing [[${sensors.numberOfElements}]] of [[${sensors.totalElements}]] sensors
+                </span>
+            </div>
+            
+            <nav th:if="${sensors.totalPages > 1}" aria-label="Page navigation">
+                <ul class="pagination justify-content-end mb-0">
+                    <!-- First Page -->
+                    <li class="page-item" th:classappend="${sensors.first} ? 'disabled' : ''">
+                        <a class="page-link" th:href="@{/sensors(page=0, size=${sensors.size}, query=${query})}" aria-label="First">
+                        </a>
+                    </li>
+                    <!-- Previous Page -->
+                    <li class="page-item" th:classappend="${sensors.first} ? 'disabled' : ''">
+                        <a class="page-link" th:href="@{/sensors(page=${sensors.number - 1}, size=${sensors.size}, query=${query})}" aria-label="Previous">
+                        </a>
+                    </li>
+                    
+                    <!-- Page Numbers -->
+                    <li class="page-item" 
+                        th:each="pageNumber : ${#numbers.sequence(T(java.lang.Math).max(0, sensors.number - 2), 
+                                           T(java.lang.Math).min(sensors.totalPages - 1, sensors.number + 2))}"
+                        th:classappend="${pageNumber == sensors.number} ? 'active' : ''">
+                        <a class="page-link" th:href="@{/sensors(page=${pageNumber}, size=${sensors.size}, query=${query})}"
+                           th:text="${pageNumber + 1}"></a>
+                    </li>
+                    
+                    <!-- Next Page -->
+                    <li class="page-item" th:classappend="${sensors.last} ? 'disabled' : ''">
+                        <a class="page-link" th:href="@{/sensors(page=${sensors.number + 1}, size=${sensors.size}, query=${query})}" aria-label="Next">
+                        </a>
+                    </li>
+                    <!-- Last Page -->
+                    <li class="page-item" th:classappend="${sensors.last} ? 'disabled' : ''">
+                        <a class="page-link" th:href="@{/sensors(page=${sensors.totalPages - 1}, size=${sensors.size}, query=${query})}" aria-label="Last">
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <script th:inline="javascript">
+            function updateUrlParameter(url, key, value) {
+                var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+                var separator = url.indexOf('?') !== -1 ? "&" : "?";
+                if (url.match(re)) {
+                    return url.replace(re, '$1' + key + "=" + value + '$2');
+                } else {
+                    return url + separator + key + "=" + value;
+                }
+            }
+        </script>
+    </section>
 </body>
 </html>

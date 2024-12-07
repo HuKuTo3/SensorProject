@@ -13,7 +13,7 @@ public class StatisticScheduler {
         this.statisticService = statisticService;
     }
 
-    @Scheduled(cron = "0 0 2 * * ?")
+    @Scheduled(cron = "${app.scheduler.statistics.cron}")
     public void collectStatistics() {
         statisticService.collectAndSaveStatistics();
     }

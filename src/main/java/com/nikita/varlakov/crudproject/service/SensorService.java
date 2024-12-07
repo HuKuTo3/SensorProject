@@ -2,12 +2,14 @@ package com.nikita.varlakov.crudproject.service;
 
 import com.nikita.varlakov.crudproject.model.Sensor;
 import com.nikita.varlakov.crudproject.repository.SensorRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class SensorService {
+@Transactional(readOnly = true)
+public class SensorService implements ISensorService {
 
     private final SensorRepository sensorRepository;
 
@@ -15,16 +17,8 @@ public class SensorService {
         this.sensorRepository = sensorRepository;
     }
 
-    public List<Sensor> getAllSensors() {
-        return sensorRepository.findAll();
-    }
-
-    public List<Sensor> searchSensors(String query) {
-        return sensorRepository.findByNameContainingIgnoreCaseOrModelContainingIgnoreCase(query, query);
-    }
-
-    public Sensor createSensor(Sensor sensor) {
-        return sensorRepository.save(sensor);
+    public Page<Sensor> getAllSensors(Pageable pageable) {
+        return sensorRepository.findAll(pageable);
     }
 
     public Sensor getSensorById(Long id) {
@@ -32,6 +26,16 @@ public class SensorService {
                 .orElseThrow(() -> new IllegalArgumentException("Sensor not found"));
     }
 
+    public Page<Sensor> searchSensors(String query, Pageable pageable) {
+        return sensorRepository.findByNameContainingIgnoreCaseOrModelContainingIgnoreCase(query, query, pageable);
+    }
+
+    @Transactional
+    public Sensor createSensor(Sensor sensor) {
+        return sensorRepository.save(sensor);
+    }
+
+    @Transactional
     public Sensor updateSensor(Long id, Sensor updatedSensor) {
         Sensor sensor = getSensorById(id);
         sensor.setName(updatedSensor.getName());
@@ -40,6 +44,7 @@ public class SensorService {
         return sensorRepository.save(sensor);
     }
 
+    @Transactional
     public void deleteSensor(Long id) {
         sensorRepository.deleteById(id);
     }
